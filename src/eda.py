@@ -1,3 +1,6 @@
+import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 import pandas as pd
 import numpy as np
@@ -36,7 +39,6 @@ def run_eda(X, y):
     plt.xticks(ticks=[0, 1], labels=["BENIGN", "MALICIOUS"], rotation=0)
     plt.tight_layout()
     plt.savefig(f"{RESULTS_DIR}/class_distribution.png", dpi=300)
-    plt.show()
     plt.close()
 
     # Missing value analysis
@@ -83,7 +85,6 @@ def run_eda(X, y):
         dpi=300,
         bbox_inches="tight",
     )
-    plt.show()
     plt.close()
 
     # Log scale (heavy-tailed behavior)
@@ -95,7 +96,6 @@ def run_eda(X, y):
         dpi=300,
         bbox_inches="tight",
     )
-    plt.show()
     plt.close()
 
     # Save EDA summary

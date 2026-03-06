@@ -5,3 +5,4 @@ xgboost
 matplotlib
 joblib
 scipy
+cupy-cuda12x

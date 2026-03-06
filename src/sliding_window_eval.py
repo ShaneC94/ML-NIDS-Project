@@ -1,6 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
+
+import matplotlib
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 
 from src.preprocess import fit_preprocessor, transform_with_preprocessor
@@ -9,6 +13,7 @@ from src.metrics import recall_at_fpr, partial_auc_at_fpr
 from sklearn.metrics import roc_auc_score
 
 os.makedirs("results", exist_ok=True)
+
 
 def load_baseline_pauc(model_name):
     baseline = pd.read_csv("results/same_day_baseline_metrics.csv")
@@ -23,25 +28,20 @@ def load_baseline_pauc(model_name):
 
     return float(value.values[0])
 
-# Sliding Window Temporal Experiment (Fixed-Size Window)    
+
+# Sliding Window Temporal Experiment
 def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
-    """
-    Sliding window temporal evaluation.
-
-    Train on last `window_size` days.
-    Test on next day.
-
-    Example (window_size=3):
-        Train: days 0,1,2
-        Test:  day 3
-        Train: days 1,2,3
-        Test:  day 4
-    """
 
     print("\n=== Sliding Window Temporal Experiment ===")
 
     results = []
     all_files = sorted(all_files)
+
+    # Fit preprocessing on full training set
+    preprocessor = fit_preprocessor(all_files)
+
+    # Cache transformed datasets
+    cached_data = {}
 
     for i in range(window_size, len(all_files)):
 
@@ -58,27 +58,49 @@ def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
         print(f"Testing on: {test_day}")
         print("------------------------------------------------")
 
-        # Fit preprocessing on current window
-        preprocessor = fit_preprocessor(train_files)
-
         X_train_parts = []
         y_train_parts = []
 
         for file in train_files:
-            X_part, y_part = transform_with_preprocessor(file, preprocessor)
+
+            if file not in cached_data:
+
+                X_part, y_part = transform_with_preprocessor(file, preprocessor)
+
+                # convert immediately to efficient format
+                X_part = X_part.astype(np.float32).to_numpy()
+                y_part = y_part.to_numpy()
+
+                cached_data[file] = (X_part, y_part)
+
+            X_part, y_part = cached_data[file]
+
             X_train_parts.append(X_part)
             y_train_parts.append(y_part)
 
-        X_train = pd.concat(X_train_parts, ignore_index=True)
-        y_train = pd.concat(y_train_parts, ignore_index=True)
+        # Efficient concatenation
+        X_train = np.vstack(X_train_parts)
+        y_train = np.concatenate(y_train_parts)
 
         print("Training shape:", X_train.shape)
-        print("Attack rate:", round(y_train.mean(), 6))
+        print("Attack rate:", round(np.mean(y_train), 6))
 
+        # Train models
         models = train_models(X_train, y_train)
 
-        X_test, y_test = transform_with_preprocessor(test_file, preprocessor)
+        # Transform test data
+        if test_file not in cached_data:
 
+            X_test, y_test = transform_with_preprocessor(test_file, preprocessor)
+
+            X_test = X_test.astype(np.float32).to_numpy()
+            y_test = y_test.to_numpy()
+
+            cached_data[test_file] = (X_test, y_test)
+
+        X_test, y_test = cached_data[test_file]
+
+        # Evaluate models
         for model_name, model in models.items():
 
             y_scores = model.predict_proba(X_test)[:, 1]
@@ -123,10 +145,10 @@ def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
 
     print("\nResults saved to results/sliding_window_results.csv")
 
-    # Plot Results
     plot_sliding_results(results_df)
 
     return results_df
+
 
 # Plot Sliding Window Results
 def plot_sliding_results(results_df):
@@ -137,8 +159,10 @@ def plot_sliding_results(results_df):
 
         baseline_pauc = load_baseline_pauc(model)
 
-        subset = results_df[results_df["model"] == model].sort_values("test_day")
-        
+        subset = results_df[
+            results_df["model"] == model
+        ].sort_values("test_day")
+
         plt.plot(
             subset["test_day"],
             subset["pauc@1%fpr"],
@@ -166,8 +190,6 @@ def plot_sliding_results(results_df):
         "results/sliding_window_pauc.png",
         dpi=300
     )
-
-    plt.show()
     plt.close()
 
     print("Saved plot to results/sliding_window_pauc.png")

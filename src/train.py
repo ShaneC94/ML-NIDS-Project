@@ -1,15 +1,23 @@
+import numpy as np
 from sklearn.ensemble import RandomForestClassifier
 from xgboost import XGBClassifier
-
 
 def train_models(X, y):
     """
     Train supervised models on provided data ONLY.
     Designed for temporal evaluation (no random splits).
-    Includes stabilized class weighting.
+
+    Random Forest -> CPU
+    XGBoost -> GPU
     """
 
     print("\n=== Training Models ===")
+
+    # Memory Optimization
+    print("Converting feature matrix to float32 for memory efficiency...")
+    X = X.astype(np.float32)
+    y = y.astype(np.int32)
+
     # Random Forest
     print("Training Random Forest...")
 
@@ -22,8 +30,8 @@ def train_models(X, y):
 
     rf_model.fit(X, y)
 
-    # XGBoost
-    print("Training XGBoost...")
+    # XGBoost (GPU)
+    print("Training XGBoost (GPU enabled)...")
 
     # Compute imbalance ratio
     neg = (y == 0).sum()
@@ -31,7 +39,7 @@ def train_models(X, y):
 
     raw_pos_weight = neg / max(pos, 1)
 
-    # Cap extreme weight to prevent gradient instability
+    # Cap extreme weight to prevent instability
     capped_pos_weight = min(raw_pos_weight, 100)
 
     print(f"Raw scale_pos_weight: {raw_pos_weight:.2f}")
@@ -51,7 +59,10 @@ def train_models(X, y):
         eval_metric="logloss",
         random_state=42,
         n_jobs=-1,
-        tree_method="hist"
+
+        # GPU acceleration
+        tree_method="hist",
+        device="cuda",
     )
 
     xgb_model.fit(X, y)

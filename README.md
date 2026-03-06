@@ -85,7 +85,19 @@ Example files used by the experiments:
 
 Run the pipeline in the following order.
 
-### 1. Exploratory Data Analysis
+### 1. Baseline Training
+
+    python train_pipeline.py
+    python baseline_same_day.py
+
+Saved models:
+
+    models/rf_model.pkl
+    models/xgb_model.pkl    
+    models/rf_same_day.pkl
+    models/xgb_same_day.pkl
+
+### 2. Exploratory Data Analysis
 
     python run_eda.py
 
@@ -96,17 +108,6 @@ Generates:
     - exploratory visualizations
 
 Output is saved to `results/`.
-
-### 2. Same Day Baseline Training
-
-    python baseline_same_day.py
-
-Trains baseline models using an 80/20 split on a single day.
-
-Saved models:
-
-    models/rf_same_day.pkl
-    models/xgb_same_day.pkl
 
 ### 3. Same Day Baseline Evaluation
 
@@ -177,10 +178,11 @@ All experiment outputs are saved to:
 
 ## Quick Start
 
-Minimal workflow - run the main experiments:
+Main experiments:
 
-    python run_eda.py
+    python train_pipeline.py
     python baseline_same_day.py
+    python run_eda.py
     python baseline_same_day.eval.py
     python run_rolling_eval.py
     python run_sliding_eval.py

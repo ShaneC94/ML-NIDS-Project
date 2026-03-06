@@ -1,6 +1,10 @@
 import os
 import pandas as pd
 import numpy as np
+import matplotlib
+
+matplotlib.use("Agg")
+
 import matplotlib.pyplot as plt
 
 from src.preprocess import fit_preprocessor, transform_with_preprocessor
@@ -9,6 +13,7 @@ from src.metrics import recall_at_fpr, partial_auc_at_fpr
 from sklearn.metrics import roc_auc_score
 
 os.makedirs("results", exist_ok=True)
+
 
 def load_baseline_pauc(model_name):
     baseline = pd.read_csv("results/same_day_baseline_metrics.csv")
@@ -23,15 +28,9 @@ def load_baseline_pauc(model_name):
 
     return float(value.values[0])
 
-# Rolling Window Temporal Experiment (Expanding Window)
-def rolling_window_experiment(all_files, target_fpr=0.01):
-    """
-    Expanding window temporal evaluation.
 
-    Train on days [0:i]
-    Test on day i
-    Requires minimum 3 training days.
-    """
+# Rolling Window Temporal Experiment
+def rolling_window_experiment(all_files, target_fpr=0.01):
 
     print("\n=== Rolling Window Temporal Experiment ===")
 
@@ -39,6 +38,15 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
 
     # Ensure chronological order
     all_files = sorted(all_files)
+
+    # Fit preprocessing on full training set
+    preprocessor = fit_preprocessor(all_files)
+
+    # Cache transformed datasets to avoid repeated preprocessing
+    cached_data = {}
+
+    X_train = None
+    y_train = None
 
     for i in range(3, len(all_files)):
 
@@ -49,7 +57,7 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
         train_end = train_files[-1].split("/")[-1]
         test_day = test_file.split("/")[-1]
 
-        temporal_distance = i - 1  # distance from first train day
+        temporal_distance = i - 1
 
         print("\n------------------------------------------------")
         print(f"Training on {len(train_files)} days")
@@ -57,42 +65,62 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
         print(f"Testing on: {test_day}")
         print("------------------------------------------------")
 
-        # Fit Preprocessing on Current Training Window
-        preprocessor = fit_preprocessor(train_files)
+        # Incremental training data growth
+        new_file = train_files[-1]
 
-        # Transform Training Data
-        X_train_parts = []
-        y_train_parts = []
+        print("Adding training data:", new_file)
 
-        for file in train_files:
-            X_part, y_part = transform_with_preprocessor(file, preprocessor)
-            X_train_parts.append(X_part)
-            y_train_parts.append(y_part)
+        if new_file not in cached_data:
 
-        X_train = pd.concat(X_train_parts, ignore_index=True)
-        y_train = pd.concat(y_train_parts, ignore_index=True)
+            X_new, y_new = transform_with_preprocessor(new_file, preprocessor)
+
+            # Convert to efficient format
+            X_new = X_new.astype(np.float32).to_numpy()
+            y_new = y_new.to_numpy()
+
+            cached_data[new_file] = (X_new, y_new)
+
+        X_new, y_new = cached_data[new_file]
+
+        if X_train is None:
+
+            X_train = X_new
+            y_train = y_new
+
+        else:
+
+            X_train = np.vstack([X_train, X_new])
+            y_train = np.concatenate([y_train, y_new])
 
         print("Training shape:", X_train.shape)
-        print("Attack rate:", round(y_train.mean(), 6))
+        print("Attack rate:", round(np.mean(y_train), 6))
 
-        # Train Models
+        # Train models
         models = train_models(X_train, y_train)
 
-        # Transform Test Day
-        X_test, y_test = transform_with_preprocessor(
-            test_file,
-            preprocessor
-        )
+        # Transform test day
+        if test_file not in cached_data:
 
-        # Evaluate Each Model
+            X_test, y_test = transform_with_preprocessor(
+                test_file,
+                preprocessor
+            )
+
+            X_test = X_test.astype(np.float32).to_numpy()
+            y_test = y_test.to_numpy()
+
+            cached_data[test_file] = (X_test, y_test)
+
+        X_test, y_test = cached_data[test_file]
+
+        # Evaluate models
         for model_name, model in models.items():
 
             y_scores = model.predict_proba(X_test)[:, 1]
 
-            # Diagnostics
             auc = roc_auc_score(y_test, y_scores)
             print(f"{model_name} | ROC-AUC: {auc:.4f}")
-            
+
             recall, _ = recall_at_fpr(
                 y_test,
                 y_scores,
@@ -124,7 +152,6 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
 
     results_df = pd.DataFrame(results)
 
-    # Save results
     results_df.to_csv(
         "results/rolling_window_results.csv",
         index=False
@@ -132,13 +159,11 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
 
     print("\nResults saved to results/rolling_window_results.csv")
 
-    # Plot Results
     plot_rolling_results(results_df)
 
     return results_df
 
 
-# Plot Rolling Window Results
 def plot_rolling_results(results_df):
 
     plt.figure(figsize=(10, 6))
@@ -147,7 +172,9 @@ def plot_rolling_results(results_df):
 
         baseline_pauc = load_baseline_pauc(model)
 
-        subset = results_df[results_df["model"] == model].sort_values("temporal_distance")
+        subset = results_df[
+            results_df["model"] == model
+        ].sort_values("temporal_distance")
 
         plt.plot(
             subset["temporal_distance"],
@@ -175,8 +202,6 @@ def plot_rolling_results(results_df):
         "results/rolling_window_pauc.png",
         dpi=300
     )
-
-    plt.show()
     plt.close()
 
     print("Saved plot to results/rolling_window_pauc.png")
