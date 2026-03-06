@@ -14,7 +14,6 @@ from sklearn.metrics import roc_auc_score
 
 os.makedirs("results", exist_ok=True)
 
-
 def load_baseline_pauc(model_name):
     baseline = pd.read_csv("results/same_day_baseline_metrics.csv")
 
@@ -27,7 +26,6 @@ def load_baseline_pauc(model_name):
         raise ValueError(f"Baseline pAUC not found for {model_name}")
 
     return float(value.values[0])
-
 
 # Sliding Window Temporal Experiment
 def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
@@ -149,7 +147,6 @@ def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
 
     return results_df
 
-
 # Plot Sliding Window Results
 def plot_sliding_results(results_df):
 
@@ -159,9 +156,7 @@ def plot_sliding_results(results_df):
 
         baseline_pauc = load_baseline_pauc(model)
 
-        subset = results_df[
-            results_df["model"] == model
-        ].sort_values("test_day")
+        subset = results_df[results_df["model"] == model].sort_values("test_day")
 
         plt.plot(
             subset["test_day"],

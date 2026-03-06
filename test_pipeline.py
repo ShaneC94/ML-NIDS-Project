@@ -200,8 +200,8 @@ print("SAME-DAY vs TEMPORAL pAUC@1%FPR")
 print("=" * 70)
 
 same_day_pauc = {
-    "RF": 0.91,
-    "XGB": 0.88,
+    "RF": 0.4197,
+    "XGB": 0.9994
 }
 
 plot_pauc_comp(
