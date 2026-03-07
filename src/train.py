@@ -21,14 +21,23 @@ def train_models(X, y):
     # Random Forest
     print("Training Random Forest...")
 
+    #Using subsample data for RF to reduce RAM usage
+    rf_sample_size = min(len(X), 2_000_000)  # Cap at 2 million samples
+    rf_indices = np.random.choice(len(X), rf_sample_size, replace=False)
+    
+    X_rf = X.iloc[rf_indices]
+    y_rf = y.iloc[rf_indices]
+
     rf_model = RandomForestClassifier(
-        n_estimators=200,
-        random_state=42,
-        class_weight="balanced",
-        n_jobs=-1
+        n_estimators=400,
+        max_depth=12,
+        min_samples_leaf=2,
+        class_weight="balanced_subsample",
+        n_jobs=-1,
+        random_state=42
     )
 
-    rf_model.fit(X, y)
+    rf_model.fit(X_rf, y_rf)
 
     # XGBoost (GPU)
     print("Training XGBoost (GPU enabled)...")
@@ -46,7 +55,7 @@ def train_models(X, y):
     print(f"Capped scale_pos_weight: {capped_pos_weight:.2f}")
 
     xgb_model = XGBClassifier(
-        n_estimators=200,
+        n_estimators=300,
         max_depth=4,
         learning_rate=0.05,
         subsample=0.8,
@@ -56,13 +65,13 @@ def train_models(X, y):
         reg_alpha=0.5,
         min_child_weight=5,
         gamma=1.0,
+        max_delta_step=2,
         eval_metric="logloss",
         random_state=42,
-        n_jobs=-1,
 
         # GPU acceleration
         tree_method="hist",
-        device="cuda",
+        device="cuda"
     )
 
     xgb_model.fit(X, y)

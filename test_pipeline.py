@@ -199,9 +199,11 @@ print("\n" + "=" * 70)
 print("SAME-DAY vs TEMPORAL pAUC@1%FPR")
 print("=" * 70)
 
+baseline_df = pd.read_csv("results/same_day_baseline_metrics.csv")
+
 same_day_pauc = {
-    "RF": 0.4197,
-    "XGB": 0.9994
+    "RF": baseline_df.loc[baseline_df.model=="RF","pauc@1%fpr"].iloc[0],
+    "XGB" : baseline_df.loc[baseline_df.model=="XGB","pauc@1%fpr"].iloc[0]
 }
 
 plot_pauc_comp(
