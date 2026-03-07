@@ -40,9 +40,6 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
     # Fit preprocessing on full training set
     preprocessor = fit_preprocessor(all_files)
 
-    # Cache transformed datasets to avoid repeated preprocessing
-    cached_data = {}
-
     X_train = None
     y_train = None
 
@@ -68,17 +65,11 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
 
         print("Adding training data:", new_file)
 
-        if new_file not in cached_data:
+        X_new, y_new = transform_with_preprocessor(new_file, preprocessor)
 
-            X_new, y_new = transform_with_preprocessor(new_file, preprocessor)
-
-            # Convert to efficient format
-            X_new = X_new.astype(np.float32).to_numpy()
-            y_new = y_new.to_numpy()
-
-            cached_data[new_file] = (X_new, y_new)
-
-        X_new, y_new = cached_data[new_file]
+        # Convert to efficient format
+        X_new = X_new.astype(np.float32).to_numpy()
+        y_new = y_new.to_numpy()
 
         if X_train is None:
 
@@ -97,19 +88,13 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
         models = train_models(X_train, y_train)
 
         # Transform test day
-        if test_file not in cached_data:
+        X_test, y_test = transform_with_preprocessor(
+            test_file,
+            preprocessor
+        )
 
-            X_test, y_test = transform_with_preprocessor(
-                test_file,
-                preprocessor
-            )
-
-            X_test = X_test.astype(np.float32).to_numpy()
-            y_test = y_test.to_numpy()
-
-            cached_data[test_file] = (X_test, y_test)
-
-        X_test, y_test = cached_data[test_file]
+        X_test = X_test.astype(np.float32).to_numpy()
+        y_test = y_test.to_numpy()
 
         # Evaluate models
         for model_name, model in models.items():

@@ -38,9 +38,6 @@ def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
     # Fit preprocessing on full training set
     preprocessor = fit_preprocessor(all_files)
 
-    # Cache transformed datasets
-    cached_data = {}
-
     for i in range(window_size, len(all_files)):
 
         train_files = all_files[i-window_size:i]
@@ -61,17 +58,11 @@ def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
 
         for file in train_files:
 
-            if file not in cached_data:
+            X_part, y_part = transform_with_preprocessor(file, preprocessor)
 
-                X_part, y_part = transform_with_preprocessor(file, preprocessor)
-
-                # convert immediately to efficient format
-                X_part = X_part.astype(np.float32).to_numpy()
-                y_part = y_part.to_numpy()
-
-                cached_data[file] = (X_part, y_part)
-
-            X_part, y_part = cached_data[file]
+            # convert immediately to efficient format
+            X_part = X_part.astype(np.float32).to_numpy()
+            y_part = y_part.to_numpy()
 
             X_train_parts.append(X_part)
             y_train_parts.append(y_part)
@@ -87,16 +78,10 @@ def sliding_window_experiment(all_files, window_size=3, target_fpr=0.01):
         models = train_models(X_train, y_train)
 
         # Transform test data
-        if test_file not in cached_data:
+        X_test, y_test = transform_with_preprocessor(test_file, preprocessor)
 
-            X_test, y_test = transform_with_preprocessor(test_file, preprocessor)
-
-            X_test = X_test.astype(np.float32).to_numpy()
-            y_test = y_test.to_numpy()
-
-            cached_data[test_file] = (X_test, y_test)
-
-        X_test, y_test = cached_data[test_file]
+        X_test = X_test.astype(np.float32).to_numpy()
+        y_test = y_test.to_numpy()
 
         # Evaluate models
         for model_name, model in models.items():
