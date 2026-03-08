@@ -8,21 +8,13 @@ os.makedirs(RESULTS_DIR, exist_ok=True)
 
 def plot_feature_importance(
     model,
-    X,
+    feature_names,
     model_name="Model",
     top_n=15,
     save_csv=True
 ):
-    """
-    Plot and return normalized feature importances for tree-based models.
 
-    Notes:
-    - This analysis is interpretability-focused only.
-    - Feature importance does NOT reflect temporal robustness or detection quality.
-    - Safe for inclusion in reports and appendices.
-    """
-
-    # Guard: model must expose feature_importances_
+# Guard: model must expose feature_importances_
     if not hasattr(model, "feature_importances_"):
         raise ValueError(
             f"{model_name} does not support feature_importances_"
@@ -31,15 +23,15 @@ def plot_feature_importance(
     importances = model.feature_importances_
 
     # Guard: feature alignment check
-    if len(importances) != X.shape[1]:
+    if len(importances) != len(feature_names):
         raise ValueError(
             f"Feature mismatch: model expects {len(importances)} features, "
-            f"but X has {X.shape[1]}"
+            f"but received {len(feature_names)} names."
         )
 
     # Build importance table
     df = pd.DataFrame({
-        "feature": X.columns,
+        "feature": feature_names,
         "importance": importances
     })
 

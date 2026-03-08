@@ -63,7 +63,7 @@ FUTURE_FILES = [
 PRIMARY_TEST = "data/CSE-CICIDS-2018/02-21-2018.csv"
 
 
-# PHASE 1: BASELINE SNAPSHOT + EDA
+# BASELINE SNAPSHOT + EDA
 print("\n" + "=" * 70)
 print("BASELINE SNAPSHOT & EDA (Feb 21)")
 print("=" * 70)
@@ -156,7 +156,7 @@ print("\nSelected operating thresholds:")
 print(f"  Random Forest: {rf_threshold:.3f}")
 print(f"  XGBoost:       {xgb_threshold:.3f}")
 
-print("\n--- Calibrated Evaluation (Feb 23) ---")
+print("\n--- Calibrated Evaluation (Feb 21) ---")
 
 evaluate_model(
     rf_model,
@@ -206,8 +206,8 @@ print("=" * 70)
 baseline_df = pd.read_csv("results/same_day_baseline_metrics.csv")
 
 same_day_pauc = {
-    "RF": baseline_df.loc[baseline_df.model=="RF","pauc@1%fpr"].values[0],
-    "XGB" : baseline_df.loc[baseline_df.model=="XGB","pauc@1%fpr"].values[0]
+    "RF": baseline_df.loc[baseline_df.model=="Random Forest","pauc@1%fpr"].values[0],
+    "XGB" : baseline_df.loc[baseline_df.model=="XGBoost","pauc@1%fpr"].values[0]
 }
 
 plot_pauc_comp(
@@ -228,8 +228,8 @@ print("\n" + "=" * 70)
 print("FEATURE IMPORTANCE (INTERPRETABILITY)")
 print("=" * 70)
 
-plot_feature_importance(rf_model, X_test, model_name="Random Forest")
-plot_feature_importance(xgb_model, X_test, model_name="XGBoost")
+plot_feature_importance(rf_model, train_features, model_name="Random Forest")
+plot_feature_importance(xgb_model, train_features, model_name="XGBoost")
 
 
 # FINAL SUMMARY
@@ -276,12 +276,3 @@ print(
     f"   Max discriminator AUC:  "
     f"{drift_df['adversarial_auc'].max():.4f}"
 )
-
-print("\nKEY FINDINGS:")
-print("  - Same-day pAUC demonstrates strong model capability")
-print("  - Temporal pAUC degrades under distribution shift")
-print("  - Recall at fixed operating points collapses over time")
-print("  - Adversarial validation confirms strong train–test shift")
-
-print("\nANALYSIS COMPLETE")
-print("Artifacts saved to /results")
