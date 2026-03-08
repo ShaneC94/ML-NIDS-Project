@@ -167,7 +167,6 @@ def plot_temporal_degradation(results_df):
     plt.legend()
     plt.tight_layout()
     plt.savefig("results/temporal_degradation_f1.png", dpi=300)
-    plt.show()
     plt.close()
 
 # Drift Impact Analysis

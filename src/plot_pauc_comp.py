@@ -72,7 +72,6 @@ def plot_pauc_comp(
         f"{RESULTS_DIR}/{model_name.lower()}_pauc_same_day_vs_temporal.png"
     )
     plt.savefig(out_path, dpi=300)
-    plt.show()
     plt.close()
 
     print(f"Saved: {out_path}")

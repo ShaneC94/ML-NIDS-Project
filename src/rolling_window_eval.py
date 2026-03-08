@@ -123,6 +123,7 @@ def rolling_window_experiment(all_files, target_fpr=0.01):
                 "test_day": test_day,
                 "temporal_distance": temporal_distance,
                 "model": model_name,
+                "roc_auc": auc,
                 "recall@1%fpr": recall,
                 "pauc@1%fpr": pauc,
             })
@@ -169,6 +170,7 @@ def plot_rolling_results(results_df):
             linestyle="--",
             linewidth=2,
             alpha=0.6,
+            label=f"{model} Same-Day Baseline"
         )
 
     plt.xlabel("Temporal Distance (Days from Start)")

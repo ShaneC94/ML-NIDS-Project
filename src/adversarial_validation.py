@@ -33,7 +33,7 @@ def adversarial_validation(X_train, X_test, random_state=42):
 
     # Discriminator (simple, linear, interpretable)
     clf = LogisticRegression(
-        max_iter=5000,
+        max_iter=10000,
         class_weight="balanced"
     )
     clf.fit(X_tr, y_tr)

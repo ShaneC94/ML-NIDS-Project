@@ -71,7 +71,6 @@ def threshold_analysis(
         f"{RESULTS_DIR}/{model_name.lower().replace(' ', '_')}_threshold_recall.png",
         dpi=300
     )
-    plt.show()
     plt.close()
 
     # Plot FPR vs Threshold
@@ -99,7 +98,6 @@ def threshold_analysis(
         f"{RESULTS_DIR}/{model_name.lower().replace(' ', '_')}_threshold_fpr.png",
         dpi=300
     )
-    plt.show()
     plt.close()
 
     return best["threshold"], df

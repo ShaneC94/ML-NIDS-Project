@@ -11,7 +11,6 @@ def plot_feature_importance(
     X,
     model_name="Model",
     top_n=15,
-    show=True,
     save_csv=True
 ):
     """
@@ -71,8 +70,6 @@ def plot_feature_importance(
     png_path = f"{RESULTS_DIR}/{safe_name}_feature_importance.png"
 
     plt.savefig(png_path, dpi=300)
-    if show:
-        plt.show()
     plt.close()
 
     # CSV export (for tables / appendix)

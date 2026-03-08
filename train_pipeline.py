@@ -41,4 +41,14 @@ joblib.dump(models["XGBoost"], "models/xgb_model.pkl")
 
 joblib.dump(preprocessor["feature_columns"], "models/train_features.pkl")
 
+# Save training metadata for evaluation pipeline
+training_metadata = {
+    "train_files": TRAIN_FILES,
+    "num_samples": int(len(y_train)),
+    "attack_rate": float(y_train.mean()),
+    "date_range": f"{TRAIN_FILES[0]} -> {TRAIN_FILES[-1]}"
+}
+
+joblib.dump(training_metadata, "models/training_metadata.pkl")
+
 print("Training complete.")

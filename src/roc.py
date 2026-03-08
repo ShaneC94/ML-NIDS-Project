@@ -93,7 +93,6 @@ def plot_roc_curve(
     filename = f"{RESULTS_DIR}/{model_name.lower().replace(' ', '_')}_roc_pauc.png"
     plt.tight_layout()
     plt.savefig(filename, dpi=300)
-    plt.show()
     plt.close()
 
     return fpr, tpr, thresholds

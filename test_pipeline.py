@@ -46,32 +46,32 @@ def align_features(X, reference_columns):
 TRAIN_FILES = training_metadata["train_files"]
 
 CALIBRATION_FILES = [
+    "data/CSE-CICIDS-2018/02-20-2018.csv",
+]
+
+TEST_FILES = [
+    "data/CSE-CICIDS-2018/02-22-2018.csv",
     "data/CSE-CICIDS-2018/02-23-2018.csv",
+]
+
+FUTURE_FILES = [
     "data/CSE-CICIDS-2018/02-28-2018.csv",
     "data/CSE-CICIDS-2018/03-01-2018.csv",
     "data/CSE-CICIDS-2018/03-02-2018.csv",
 ]
 
-TEST_FILES = [
-    "data/CSE-CICIDS-2018/02-20-2018.csv",
-    "data/CSE-CICIDS-2018/02-21-2018.csv",
-    "data/CSE-CICIDS-2018/02-22-2018.csv",
-]
-
-PRIMARY_TEST = "data/CSE-CICIDS-2018/02-23-2018.csv"
+PRIMARY_TEST = "data/CSE-CICIDS-2018/02-21-2018.csv"
 
 
 # PHASE 1: BASELINE SNAPSHOT + EDA
 print("\n" + "=" * 70)
-print("BASELINE SNAPSHOT & EDA (Feb 23)")
+print("BASELINE SNAPSHOT & EDA (Feb 21)")
 print("=" * 70)
 
 X_test, y_test = load_and_preprocess_2018(PRIMARY_TEST)
+print("\nLabel distribution:")
+print(pd.Series(y_test).value_counts())
 X_test = align_features(X_test, train_features)
-
-# Convert to efficient format
-X_test = X_test.astype("float32").to_numpy()
-y_test = y_test.to_numpy()
 
 print(
     f"Test set: {X_test.shape[0]:,} samples | "
@@ -80,6 +80,10 @@ print(
 
 print("\nRunning exploratory data analysis (required)...")
 run_eda(X_test, y_test)
+
+# Convert to efficient format
+X_test = X_test.astype("float32").to_numpy()
+y_test = y_test.to_numpy()
 
 gc.collect()
 
@@ -202,8 +206,8 @@ print("=" * 70)
 baseline_df = pd.read_csv("results/same_day_baseline_metrics.csv")
 
 same_day_pauc = {
-    "RF": baseline_df.loc[baseline_df.model=="RF","pauc@1%fpr"].iloc[0],
-    "XGB" : baseline_df.loc[baseline_df.model=="XGB","pauc@1%fpr"].iloc[0]
+    "RF": baseline_df.loc[baseline_df.model=="RF","pauc@1%fpr"].values[0],
+    "XGB" : baseline_df.loc[baseline_df.model=="XGB","pauc@1%fpr"].values[0]
 }
 
 plot_pauc_comp(

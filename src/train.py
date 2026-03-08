@@ -15,18 +15,22 @@ def train_models(X, y):
 
     # Memory Optimization
     print("Converting feature matrix to float32 for memory efficiency...")
-    X = X.astype(np.float32)
-    y = y.astype(np.int32)
+    X = np.asarray(X, dtype=np.float32)
+    y = np.asarray(y, dtype=np.int32)
+    print(f"Training data shape: {X.shape}")
 
     # Random Forest
     print("Training Random Forest...")
 
     #Using subsample data for RF to reduce RAM usage
     rf_sample_size = min(len(X), 2_000_000)  # Cap at 2 million samples
-    rf_indices = np.random.choice(len(X), rf_sample_size, replace=False)
+    rng = np.random.default_rng(42)
+    rf_indices = rng.choice(len(X), rf_sample_size, replace=False)
     
-    X_rf = X.iloc[rf_indices]
-    y_rf = y.iloc[rf_indices]
+    X_rf = X[rf_indices]
+    y_rf = y[rf_indices]
+
+    print(f"RF training samples: {len(X_rf)}")
 
     rf_model = RandomForestClassifier(
         n_estimators=400,

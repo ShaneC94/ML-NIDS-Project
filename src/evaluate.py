@@ -112,7 +112,6 @@ def evaluate_model(
             f"{RESULTS_DIR}/{model_name.lower().replace(' ', '_')}_confusion_matrix_operational.png",
             dpi=300,
         )
-        plt.show()
         plt.close()
 
     # Precision–Recall Curve (diagnostic visualization)
@@ -131,7 +130,6 @@ def evaluate_model(
             f"{RESULTS_DIR}/{model_name.lower().replace(' ', '_')}_pr_curve.png",
             dpi=300,
         )
-        plt.show()
         plt.close()
 
     # Return metrics for tables / CSVs

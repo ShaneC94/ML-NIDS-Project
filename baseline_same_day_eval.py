@@ -15,6 +15,10 @@ os.makedirs("results", exist_ok=True)
 X_test = joblib.load("models/X_test_same_day.pkl")
 y_test = joblib.load("models/y_test_same_day.pkl")
 
+#Ensure the same format as training
+X_test = np.asarray(X_test, dtype=np.float32)
+y_test = np.asarray(y_test, dtype=np.int32)
+
 rf = joblib.load("models/rf_same_day.pkl")
 xgb = joblib.load("models/xgb_same_day.pkl")
 
